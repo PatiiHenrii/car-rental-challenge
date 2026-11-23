@@ -1,0 +1,88 @@
+<a mat-button [routerLink]="isEdit() ? '/reservations' : '/cars'">
+  <mat-icon>arrow_back</mat-icon> {{ isEdit() ? 'My reservations' : 'All cars' }}
+</a>
+
+<h1>{{ isEdit() ? 'Edit reservation' : 'Book a car' }}</h1>
+
+@if (!userStore.currentUser()) {
+  <div class="empty-state">
+    <mat-icon>person</mat-icon>
+    <p>Select a customer in the toolbar to {{ isEdit() ? 'edit this reservation' : 'book a car' }}.</p>
+  </div>
+} @else if (isEdit() && reservationStore.loading() && !editTarget()) {
+  <div class="center"><mat-spinner diameter="48" /></div>
+} @else if (isEdit() && reservationStore.error(); as error) {
+  <app-error-panel [message]="error" (retry)="reservationStore.load(userStore.currentUser()!.id)" />
+} @else if (editTargetMissing()) {
+  <app-error-panel message="Reservation not found for this customer." [retryable]="false" />
+} @else {
+  <mat-card appearance="outlined" class="form-card">
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field>
+          <mat-label>Car</mat-label>
+          <mat-select formControlName="carId">
+            @for (car of carStore.bookableCars(); track car.id) {
+              <mat-option [value]="car.id">
+                {{ car.manufacturer }} {{ car.model }} · {{ car.rate_per_day | currency }}/day
+              </mat-option>
+            }
+          </mat-select>
+          @if (carStore.loading()) {
+            <mat-hint>Loading cars…</mat-hint>
+          }
+          @if (form.controls.carId.hasError('required')) {
+            <mat-error>Please choose a car</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="row">
+          <mat-form-field>
+            <mat-label>Pick-up</mat-label>
+            <input matInput type="datetime-local" formControlName="pickupTime" [min]="minDate" />
+            @if (form.controls.pickupTime.hasError('required')) {
+              <mat-error>Pick-up date and time are required</mat-error>
+            } @else if (form.controls.pickupTime.hasError('pastDate')) {
+              <mat-error>Pick-up must be in the future</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Drop-off</mat-label>
+            <input matInput type="datetime-local" formControlName="dropoffTime" [min]="minDate" />
+            @if (form.controls.dropoffTime.hasError('required')) {
+              <mat-error>Drop-off date and time are required</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        @if (form.hasError('periodOrder') && form.controls.dropoffTime.touched) {
+          <p class="form-error" role="alert">Drop-off must be after pick-up.</p>
+        }
+
+        <div class="summary">
+          <span class="muted">Customer</span>
+          <strong>{{ userStore.currentUser()?.name }}</strong>
+          @if (estimate(); as estimate) {
+            <span class="muted">Estimated total</span>
+            <strong>{{ estimate.total | currency }} <span class="muted">({{ estimate.days }} day(s))</span></strong>
+          }
+        </div>
+
+        @if (submitError(); as error) {
+          <app-error-panel [message]="error" [retryable]="false" />
+        }
+
+        <div class="actions">
+          <button mat-flat-button type="submit" [disabled]="submitting()">
+            @if (submitting()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ isEdit() ? 'Save changes' : 'Review booking' }}
+            }
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+}

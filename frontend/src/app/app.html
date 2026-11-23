@@ -1,0 +1,30 @@
+<mat-toolbar class="toolbar">
+  <a class="brand" routerLink="/cars">
+    <mat-icon>directions_car</mat-icon>
+    <span>Car Rental</span>
+  </a>
+  <nav>
+    <a mat-button routerLink="/cars" routerLinkActive="active">Cars</a>
+    <a mat-button routerLink="/reservations" routerLinkActive="active">My reservations</a>
+  </nav>
+  <span class="spacer"></span>
+  <mat-form-field class="user-select" subscriptSizing="dynamic">
+    <mat-label>Customer</mat-label>
+    <mat-select
+      [value]="userStore.currentUserId()"
+      (selectionChange)="userStore.selectUser($event.value)"
+      [disabled]="userStore.users().length === 0"
+    >
+      @for (user of userStore.users(); track user.id) {
+        <mat-option [value]="user.id">{{ user.name }}</mat-option>
+      }
+    </mat-select>
+    @if (userStore.error()) {
+      <mat-hint class="hint-error">Could not load customers</mat-hint>
+    }
+  </mat-form-field>
+</mat-toolbar>
+
+<main class="content">
+  <router-outlet />
+</main>

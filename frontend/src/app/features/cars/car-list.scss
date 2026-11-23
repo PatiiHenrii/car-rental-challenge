@@ -1,0 +1,35 @@
+.filter-panel {
+  margin-bottom: 16px;
+  min-height: 56px;
+}
+
+app-error-panel {
+  display: block;
+  margin: 16px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.car-card {
+  display: flex;
+  flex-direction: column;
+
+  mat-card-content {
+    flex: 1;
+  }
+}
+
+.price {
+  font: var(--mat-sys-title-large);
+  margin: 12px 0;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}

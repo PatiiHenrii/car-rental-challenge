@@ -1,0 +1,58 @@
+<div class="page-header">
+  <h1>Cars</h1>
+</div>
+
+<section class="filter-panel" aria-label="Check availability">
+  <!-- secondary, interactive panel: loaded after the fleet is on screen -->
+  @defer (on idle) {
+    <app-availability-filter />
+  } @placeholder (minimum 200ms) {
+    <p class="muted">Loading availability filter…</p>
+  }
+</section>
+
+@if (store.checkingAvailability()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (store.error(); as error) {
+  <app-error-panel [message]="error" (retry)="store.load(true)" />
+}
+
+@if (store.loading()) {
+  <div class="center"><mat-spinner diameter="48" /></div>
+} @else {
+  <div class="grid">
+    @for (car of store.cars(); track car.id) {
+      <mat-card appearance="outlined" class="car-card">
+        <mat-card-header>
+          <mat-card-title>{{ car.manufacturer }} {{ car.model }}</mat-card-title>
+          <mat-card-subtitle>{{ car.year }} · {{ car.license_plate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="price">{{ car.rate_per_day | currency }} <span class="muted">/ day</span></p>
+          <app-car-status-chip [status]="car.status" [availableInPeriod]="store.isAvailableInPeriod(car.id)" />
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <a mat-button [routerLink]="['/cars', car.id]">Details</a>
+          <a
+            mat-flat-button
+            [routerLink]="canBook(car) ? ['/cars', car.id, 'book'] : null"
+            [queryParams]="bookingParams()"
+            [class.disabled]="!canBook(car)"
+            [attr.aria-disabled]="!canBook(car)"
+          >
+            Book
+          </a>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      @if (!store.error()) {
+        <div class="empty-state">
+          <mat-icon>no_crash</mat-icon>
+          <p>No cars in the fleet yet.</p>
+        </div>
+      }
+    }
+  </div>
+}

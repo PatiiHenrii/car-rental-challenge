@@ -1,0 +1,47 @@
+<div class="page-header">
+  <h1>My reservations</h1>
+  <a mat-flat-button routerLink="/cars"><mat-icon>add</mat-icon> New booking</a>
+</div>
+
+@if (!userStore.currentUser()) {
+  <div class="empty-state">
+    <mat-icon>person</mat-icon>
+    <p>Select a customer in the toolbar to see their reservations.</p>
+  </div>
+} @else if (store.loading() && store.reservations().length === 0) {
+  <div class="center"><mat-spinner diameter="48" /></div>
+} @else if (store.error(); as error) {
+  <app-error-panel [message]="error" (retry)="reload()" />
+} @else {
+  <div class="list">
+    @for (reservation of store.reservations(); track reservation.id) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ carLabel(reservation) }}</mat-card-title>
+          <mat-card-subtitle>{{ plate(reservation) }} · {{ reservation.status | titlecase }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <dl>
+            <dt>Pick-up</dt><dd>{{ reservation.pickup_time | date: 'EEE, MMM d, y, h:mm a' }}</dd>
+            <dt>Drop-off</dt><dd>{{ reservation.dropoff_time | date: 'EEE, MMM d, y, h:mm a' }}</dd>
+            <dt>Total</dt><dd class="total">{{ reservation.total_price | currency }}</dd>
+          </dl>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <a mat-button [routerLink]="['/reservations', reservation.id, 'edit']">
+            <mat-icon>edit</mat-icon> Modify
+          </a>
+          <button mat-button class="danger" [disabled]="cancelling() === reservation.id" (click)="cancel(reservation)">
+            <mat-icon>delete</mat-icon> Cancel
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      <div class="empty-state">
+        <mat-icon>event_busy</mat-icon>
+        <p>No reservations yet.</p>
+        <a mat-button routerLink="/cars">Browse cars</a>
+      </div>
+    }
+  </div>
+}
